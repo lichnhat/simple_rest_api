@@ -61,8 +61,6 @@ class Restapi extends Controller {
 
 			$data = array();
 
-			$sid = session_regenerate_id();
-
 			$ip = $_SERVER["REMOTE_ADDR"];
 
 			/* Login success then insert +1 record to recent table */
@@ -93,7 +91,7 @@ class Restapi extends Controller {
 			$this->response->setJsonContent(
 				[
 					"status" => "Errors",
-					"message" => "Request User name or password",
+					"message" => "Uname or pass not match !",
 				]
 			);
 		}
@@ -196,10 +194,9 @@ class Restapi extends Controller {
 	/*
 	 *	PUT User's info By SSID
 	 */
-	public function updateAction() {
+	public function updateuserAction() {
 
 		$info_user = $this->request->getJsonRawBody();
-
 		$pass = $info_user->pass;
 		$new_pass = $info_user->new_pass;
 
@@ -218,15 +215,20 @@ class Restapi extends Controller {
 			$get_user->pass = $new_pass;
 
 			if($get_user->update() === true) {
+
+				$data = array();
+				$data[] = [
+					"old_pass" => $pass,
+					"new_pass" => $new_pass,
+				];
 				$this->response->setJsonContent(
 					[
-						"status" => "DONE",
-						"message" => "Change password successfully",
+						"status" => "OK",
+						"message" => "UPDATED",
+						"data" => $data,
 					]
 				);
-			}
-			else {
-				$this->response->setStatusCode(409, "Conflict");
+
 			}
 
 		}
@@ -234,13 +236,12 @@ class Restapi extends Controller {
 
 			$this->response->setJsonContent(
 				[
-					"status" => "ERRORS",
-					"message" => "INCORRECT YOUR INFO"
+					"status" => "Fail",
+					"message" => "Inconrect info !",
 				]
 			);
 
 		}
-
 		return $this->response;
 	}
 	/*
@@ -265,11 +266,13 @@ class Restapi extends Controller {
 
 		if($get_user) {
 
+			$uid = $get_user->id;
 			$get_recent = Recent::findFirst(
 				[
-					"id = :id:",
+					"id = :id: AND uid = :uid:",
 					"bind" => [
 						"id" => $this->id,
+						"uid" => $uid,
 					]
 				]
 			);
@@ -313,6 +316,74 @@ class Restapi extends Controller {
 	 *	DELETE a record By SSID
 	 */
 	public function removerecentAction() {
+
+		$get_user = Users::findFirst(
+			[
+				"ssid = :ssid:",
+				"bind" => [
+					"ssid" => $this->ssid,
+				],
+			]
+		);
+
+		if($get_user) {
+
+			$uid = $get_user->id;
+			$get_recent = Recent::findFirst(
+				[
+					"id = :id: AND uid = :uid:",
+					"bind" => [
+						"id" => $this->id,
+						"uid" => $uid,
+					],
+				]
+			);
+
+			if($get_recent) {
+
+				$data = array();
+				$data[] = [
+					"user_id" => $uid,
+					"record_id" => $get_recent->id,
+				];
+
+				if($get_recent->delete() === true) {
+
+					$this->response->setJsonContent(
+						[
+							"status" => "OK",
+							"message" => "DELETED",
+							"data" => $data,
+						]
+					);
+
+				}
+
+			}
+			else {
+
+				$this->response->setJsonContent(
+					[
+						"status" => "Fail",
+						"message" => "Recent wasn't be long to user !",
+					]
+				);
+
+			}
+
+		}
+		else {
+
+			$this->response->setJsonContent(
+				[
+					"status" => "Fail",
+					"message" => "User not exits !",
+				]
+			);
+
+		}
+
+		return $this->response;
 
 	}
 

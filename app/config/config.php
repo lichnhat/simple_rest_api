@@ -24,6 +24,6 @@ return new \Phalcon\Config([
         'pluginsDir'     => APP_PATH . '/plugins/',
         'libraryDir'     => APP_PATH . '/library/',
         'cacheDir'       => BASE_PATH . '/cache/',
-        'baseUri'        => '/simple_rest_api/',
+        'baseUri'        => '/phalcon_simplest_rest/',
     ]
 ]);

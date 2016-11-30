@@ -16,21 +16,21 @@ class Users extends Model {
 
 	public $ssid;
 
-	public function validation() {
+	/*public function validation() {
 
 		$this->validate(
 			new Uniqueness(
 				[
 					"field" => "uname",
 					"message" => "Đăng nhập đã tồn tại !"
-				],
-				[
-					"field" => "email",
-					"message" => "Email đã tồn tại !",
 				]
 			)
 		);
 
-	}
+        if ($this->validationHasFailed() === true) {
+            return false;
+        }
+
+	}*/
 
 }

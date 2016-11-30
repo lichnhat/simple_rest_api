@@ -44,7 +44,7 @@ $router->addGet("/recent/([0-9A-Za-z]+)", [
  */
 $router->addPut("/users/([0-9A-Za-z]+)", [
 	"controller" => "users",
-	"action" => "update",
+	"action" => "updateuser",
 	"ssid" => 1,
 ]);
 /*
