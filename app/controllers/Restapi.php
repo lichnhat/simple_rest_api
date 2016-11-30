@@ -50,19 +50,26 @@ class Restapi extends Controller {
 		$email = $info_user->email;
 
 		$message = array();
-		if($uname === "") {
+		if($uname == "") {
 			$message[] = "Uname";
 		}
-		if($pass === "") {
+		if($pass == "") {
 			$message[] = "Pass";
 		}
-		if($email === "") {
+		if($email == "") {
 			$message[] = "Email";
 		}
 
-		if(!empty($message)) {
+		if(empty($message)) {
 			$user = new Users();
-			$ssid = session_regenerate_id();
+			
+			$get_id_last_user = Users::maximum(
+				[
+					"column" => "id",
+				]
+			);
+			session_regenerate_id(true);
+			$ssid = session_id(md5($get_id_last_user+1));
 
 			$user->uname = $uname;
 			$user->pass = $pass;
@@ -91,7 +98,7 @@ class Restapi extends Controller {
 				$this->response->setStatusCode(409, "Conflict");
 				$this->response->setJsonContent(
 					[
-						"status" => "Fail",
+						"status" => "Fail save",
 					]
 				);
 			}
@@ -104,6 +111,8 @@ class Restapi extends Controller {
 				]
 			);
 		}
+
+		return $this->response;
  
 	}
 
