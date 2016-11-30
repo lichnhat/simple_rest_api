@@ -7,6 +7,17 @@
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
         <title>Phalcon PHP Framework</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <style type="text/css">
+            li {
+                line-height: 50px;
+            }
+            .link {
+                color: #fff;
+                background-color: #7ad27a;
+                padding: 5px;
+                box-sizing: border-box;
+            }
+        </style>
     </head>
     <body>
         <div class="container">

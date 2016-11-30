@@ -1,6 +1,6 @@
 <?php
 
-class IndexController extends Restapi
+class IndexController extends ControllerBase
 {
 
     public function indexAction()

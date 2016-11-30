@@ -2,14 +2,11 @@
 
 use Phalcon\Mvc\Controller;
 use Phalcon\Mvc\Dispatcher;
-use Phalcon\Http\Request;
 use Phalcon\Http\Response;
+use Phalcon\Http\Request;
 
 class Restapi extends Controller {
-	
-	/*
-	 *	
-	 */
+
 	private $controllerName;
 
 	private $modelName;
@@ -18,76 +15,85 @@ class Restapi extends Controller {
 
 	private $request;
 
-	private $id;
-
 	private $ssid;
 
+	private $id;
+
 	public function initialize() {
+
+		$this->controllerName = $this->dispatcher->getControllerName();
 
 		$this->response = new Response();
 
 		$this->request = new Request();
 
-		$this->controllerName = $this->dispatcher->getControllerName();
-
-		$this->modelName = $this->controllerName;
+		$this->ssid = $this->dispatcher->getParam("ssid");
 
 		$this->id = $this->dispatcher->getParam("id");
 
-		$this->ssid = $this->dispatcher->getParam("ssid");
+	}
+
+	public function indexAction() {
 
 	}
 
 	/*
-	 *	GET list user current in database
+	 *	POST login
+	 *	ADD new record
 	 */
-	public function listusersAction() {
-		$modelName = $this->modelName;
+	public function loginAction() {
 
-		$rs = $modelName::find();
+		$user = $this->request->getJsonRawBody();
+		$uname = $user->uname;
+		$pass = $user->pass;
+		
+		$get_user = Users::findFirst(
+			[
+				"uname = :uname: AND pass = :pass:",
+				"bind" => [
+					"uname" => $uname,
+					"pass" => $pass,
+				],
+			]
+		);
 
-		$data = array();
+		if($get_user) {
 
-		foreach($rs as $r) {
-			$data[] = [
-				"id" => $r->id,
-				"uname" => $r->uname,
-				"email" => $r->email,
-				"pass" => $r->pass,
-				"ssid" => $r->ssid
-			];
-		}
+			$data = array();
 
-		return json_encode($data);
-	}
+			$sid = session_regenerate_id();
 
-	/*
-	 * GET info active user by current id
-	 */
-	public function infouserAction() {
-		$modelName = $this->modelName;
+			$ip = $_SERVER["REMOTE_ADDR"];
 
-		$rs = $modelName::findFirst( $this->id);
+			/* Login success then insert +1 record to recent table */
+			$recent = new Recent();
+			$recent->uid = $get_user->id;
+			$recent->ip = $ip;
+			if($recent->save() === true) {
+				$this->response->setStatusCode(201, "Created");
+				$data[] = [
+					"uname" => $uname,
+					"email" => $get_user->email,
+					"ssid" => $get_user->ssid,
+				];
 
-		$data = array();
-		if($rs === false) {
-			$this->response->setJsonContent(
-				[
-					"status" => "NOT FOUND",
-				]
-			);
+				$this->response->setJsonContent(
+					[
+						"status" => "OK",
+						"message" => "Insert new record to recent login and Out put info",
+						"data" => $data,
+					]
+				);
+			}
+
+			
 		}
 		else {
+			$this->response->setStatusCode(409, "Conflict");
 			$this->response->setJsonContent(
 				[
-					"status" => "FOUND",
-					"data" => [
-						"id" => $rs->id,
-						"uname" => $rs->uname,
-						"email" => $rs->email,
-						"pass" => $rs->pass,
-						"ssid" => $rs->ssid
-					]
+					"status" => "Errors",
+					"message" => "Request User name or password",
 				]
 			);
 		}
@@ -96,65 +102,218 @@ class Restapi extends Controller {
 	}
 
 	/*
-	 * GET list recent of current use id 
+	 *	Info User By SSID
 	 */
-	public function listrecentAction() {
-		$modelName = $this->modelName;
+	public function infoAction() {
 
-		$user = Users::findFirst(
-				[
-					"ssid = :ssid:",
-					"bind" => [
-						"ssid" => $this->ssid,
-					],
-				]
-			);
-		$id = $user->id;
+		$get_user = Users::findFirst(
+			[
+				"ssid = :ssid:",
+				"bind" => [
+					"ssid" => $this->ssid,
+				],
+			]
+		);
 
-		$rs = $modelName::find(
-				[
-					"uid = :uid:",
-					"bind" => [
-						"uid" => $id,
-					],
-				]
-			);
-		return json_encode($rs);
-	}
+		if($get_user) {
 
-	/*
-	 * POST save user or a recent.
-	 */
-
-	public function saveAction() {
-		$modelName = $this->modelName;
-
-		$model = new $modelName();
-
-		$user = $this->request->getJsonRawBody();
-
-		$model->uname = $user->uname;
-		$model->email = $user->email;
-		$model->pass = $user->pass;
-		$model->ssid = md5($user->pass);
-
-		if($model->save()) {
-			$this->response->setStatusCode(201, "Created");
 			$this->response->setJsonContent(
 				[
 					"status" => "OK",
-					"data" => $user,
+					"data" => $get_user,
 				]
 			);
+
 		}
 		else {
-			$this->response->setStatusCode(409, "E");
 
 			$this->response->setJsonContent(
 				[
-					"status" => "Errors !",
+					"status" => "Errors",
+					"message" => "User not exist !",
+				]
+			);
+
+		}
+
+		return $this->response;
+
+	}
+	/*
+	 *	GET List User's recent By SSID
+	 */
+	public function listAction() {
+
+		$get_user = Users::findFirst(
+			[
+				"ssid = :ssid:",
+				"bind" => [
+					"ssid" => $this->ssid,
+				],
+			]
+		);
+
+		if($get_user) {
+
+			$uid = $get_user->id;
+			$get_recent = Recent::find(
+				[
+					"uid = :uid:",
+					"bind" => [
+						"uid" => $uid,
+					],
+				]
+			);
+
+			if($get_recent) {
+				$this->response->setJsonContent(
+					[
+						"status" => "ALL FOUND SHOW BELOW",
+						"data" => $get_recent,
+					]
+				);
+			}
+			else {
+				$this->response->setJsonContent(
+					[
+						"status" => "NO RECENT BE FOUND !",
+					]
+				);
+			}
+
+		}
+		else {
+			$this->response->setJsonContent(
+				[
+					"status" => "NOT EXIST",
 				]
 			);
 		}
+
+		return $this->response;
+
 	}
+	/*
+	 *	PUT User's info By SSID
+	 */
+	public function updateAction() {
+
+		$info_user = $this->request->getJsonRawBody();
+
+		$pass = $info_user->pass;
+		$new_pass = $info_user->new_pass;
+
+		$get_user = Users::findFirst(
+			[
+				"ssid = :ssid: AND pass = :pass:",
+				"bind" => [
+					"ssid" => $this->ssid,
+					"pass" => $pass,
+				],
+			]
+		);
+
+		if($get_user) {
+
+			$get_user->pass = $new_pass;
+
+			if($get_user->update() === true) {
+				$this->response->setJsonContent(
+					[
+						"status" => "DONE",
+						"message" => "Change password successfully",
+					]
+				);
+			}
+			else {
+				$this->response->setStatusCode(409, "Conflict");
+			}
+
+		}
+		else {
+
+			$this->response->setJsonContent(
+				[
+					"status" => "ERRORS",
+					"message" => "INCORRECT YOUR INFO"
+				]
+			);
+
+		}
+
+		return $this->response;
+	}
+	/*
+	 *	DELETE User By SSID
+	 */
+	public function removeuserAction() {
+
+	}
+	/*
+	 *	GET User's recent By it's id
+	 */
+	public function inforecentAction() {
+
+		$get_user = Users::findFirst(
+			[
+				"ssid = :ssid:", 
+				"bind" => [
+					"ssid" => $this->ssid,
+				],
+			]
+		);
+
+		if($get_user) {
+
+			$get_recent = Recent::findFirst(
+				[
+					"id = :id:",
+					"bind" => [
+						"id" => $this->id,
+					]
+				]
+			);
+
+			if($get_recent) {
+
+				$this->response->setJsonContent(
+					[
+						"status" => "Success !",
+						"data" => $get_recent,
+					]
+				);
+
+			}
+			else {
+
+				$this->response->setJsonContent(
+					[
+						"status" => "Errors !",
+						"message" => "No record be found",
+					]
+				);
+
+			}
+
+		}
+		else {
+
+				$this->response->setJsonContent(
+					[
+						"status" => "Errors !",
+						"message" => "No info be found",
+					]
+				);
+
+		}
+
+		return $this->response;
+	}
+	/*
+	 *	DELETE a record By SSID
+	 */
+	public function removerecentAction() {
+
+	}
+
 }

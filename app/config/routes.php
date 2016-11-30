@@ -7,44 +7,70 @@ $router = new Router();
 $router->removeExtraSlashes(true);
 
 /*
- *	Add URI
+ * Index
  */
 $router->add("/", [
 	"controller" => "index",
-	"action" => "index"
+	"action" => "index",
 ]);
 
 /*
- * POST add user
- * POST add recent
+ * POST Login users
+ * add new recent
  */
-$router->addPost("/users",[
+$router->addPost("/users", [
 	"controller" => "users",
-	"action" => "save",
+	"action" => "login",
 ]);
 
 /*
- * GET users
+ * GET info current user
  */
-$router->addGet("/users",[
+$router->addGet("/users/([0-9A-Za-z]+)", [
 	"controller" => "users",
-	"action" => "listusers",
-]);
-
-/* GET info User by ID */
-/* GET recent Login by ID */
-/* GET list */
-$router->addGet("/users/([0-9]+)", [
-	"controller" => "users",
-	"action" => "infouser",
-	"id" => 1,
-]);
-
-/*
- * GET all recent 
- */
-$router->addGet("/recent/([a-z0-9A-Z\_\-]+)", [
-	"controller" => "recent",
-	"action" => "listrecent",
+	"action" => "info",
 	"ssid" => 1,
 ]);
+/*
+ * GET recent current
+ */
+$router->addGet("/recent/([0-9A-Za-z]+)", [
+	"controller" => "recent",
+	"action" => "list",
+	"ssid" => 1,
+]);
+/*
+ * PUT user info
+ */
+$router->addPut("/users/([0-9A-Za-z]+)", [
+	"controller" => "users",
+	"action" => "update",
+	"ssid" => 1,
+]);
+/*
+ * DELETE user info
+ */
+$router->addDelete("/users/([0-9A-Za-z]+)", [
+	"controller" => "users",
+	"action" => "removeuser",
+	"ssid" => 1,
+]);
+/*
+ * GET user's recent by recent's id
+ */
+$router->addGet("/recent/([0-9A-Za-z]+)/([0-9]+)", [
+	"controller" => "recent",
+	"action" => "inforecent",
+	"ssid" => 1,
+	"id" => 2,
+]);
+/*
+ * DELETE user's recent by recent's id
+ */
+$router->addDelete("/recent/([0-9A-Za-z]+)/([0-9]+)", [
+	"controller" => "users",
+	"action" => "removerecent",
+	"ssid" => 1,
+	"id" => 2,
+]);
+return $router;

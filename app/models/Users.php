@@ -6,35 +6,31 @@ use Phalcon\Mvc\Model\Validator\Uniqueness;
 
 class Users extends Model {
 
-	/* Int */
 	public $id;
 
-	/* String */
 	public $uname;
 
-	/* String */
 	public $email;
 
-	/* String */
 	public $pass;
 
-	/* String */
 	public $ssid;
 
 	public function validation() {
 
 		$this->validate(
-			new Uniqueness (
+			new Uniqueness(
 				[
 					"field" => "uname",
-					"message" => "Your NAME must be unique !",
+					"message" => "Đăng nhập đã tồn tại !"
 				],
 				[
 					"field" => "email",
-					"message" => "Your EMAIL must be unique !"
+					"message" => "Email đã tồn tại !",
 				]
 			)
 		);
 
 	}
+
 }

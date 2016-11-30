@@ -9,11 +9,9 @@ use Phalcon\Session\Adapter\Files as SessionAdapter;
 use Phalcon\Flash\Direct as Flash;
 
 
-/**
- * Router
- */
-$di->set("router", function() {
+$di->set('router', function () {
     require 'routes.php';
+
     return $router;
 });
 /**
