@@ -13,12 +13,18 @@ $router->add("/", [
 	"controller" => "index",
 	"action" => "index",
 ]);
-
+/*
+ *	POST register new
+ */
+$router->addPost("/register", [
+	"controller" => "users",
+	"action" => "signup",
+]);
 /*
  * POST Login users
  * add new recent
  */
-$router->addPost("/users", [
+$router->addPost("/login", [
 	"controller" => "users",
 	"action" => "login",
 ]);
