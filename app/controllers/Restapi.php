@@ -36,6 +36,76 @@ class Restapi extends Controller {
 	public function indexAction() {
 
 	}
+	/*
+	 * POST register new
+	 */
+	public function signupAction() {
+
+		$info_user = $this->request->getJsonRawBody();
+
+		$uname = $pass = $email = "";
+
+		$uname = $info_user->uname;
+		$pass = $info_user->pass;
+		$email = $info_user->email;
+
+		$message = array();
+		if($uname === "") {
+			$message[] = "Uname";
+		}
+		if($pass === "") {
+			$message[] = "Pass";
+		}
+		if($email === "") {
+			$message[] = "Email";
+		}
+
+		if(!empty($message)) {
+			$user = new Users();
+			$ssid = session_regenerate_id();
+
+			$user->uname = $uname;
+			$user->pass = $pass;
+			$user->email = $email;
+			$user->ssid = $ssid;
+
+			if($user->save() === true) {
+				$data = array();
+
+				$data[] = [
+					"uname" => $uname,
+					"pass" => $pass,
+					"email" => $email,
+					"ssid" => $ssid
+				];
+				$this->response->setStatusCode(201, "Created");
+				$this->response->setJsonContent(
+					[
+						"status" => "OK",
+						"data" => $data,
+
+					]
+				);
+			}
+			else {
+				$this->response->setStatusCode(409, "Conflict");
+				$this->response->setJsonContent(
+					[
+						"status" => "Fail",
+					]
+				);
+			}
+		}
+		else {
+			$this->response->setJsonContent(
+				[
+					"status" => "Required field !",
+					"message" => $message
+				]
+			);
+		}
+ 
+	}
 
 	/*
 	 *	POST login
