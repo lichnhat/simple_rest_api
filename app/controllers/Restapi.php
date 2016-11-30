@@ -63,14 +63,8 @@ class Restapi extends Controller {
 		if(empty($message)) {
 			$user = new Users();
 			
-			$get_id_last_user = Users::maximum(
-				[
-					"column" => "id",
-				]
-			);
-			session_regenerate_id(true);
-			$ssid = session_id(md5($get_id_last_user+1));
-
+			$ssid = $this->session->getId();
+			session_regenerate_id();
 			$user->uname = $uname;
 			$user->pass = $pass;
 			$user->email = $email;
@@ -111,6 +105,13 @@ class Restapi extends Controller {
 				]
 			);
 		}
+
+		/*$this->response->setJsonContent(
+			[
+				"status" => "Required field !",
+				"message" => $ssid,
+			]
+		);*/
 
 		return $this->response;
  
